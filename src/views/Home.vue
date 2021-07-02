@@ -1,8 +1,8 @@
 <template>
-  <div class="home">
+  <div class="home" ref="outputRef">
     <ul class="output">
       <li v-for="(item, idx) in output" :key="idx">{{ item }}</li>
-      <li v-if="isLoading" class="dot-pulse"></li>
+      <li v-if="isLoading" class="dot-pulse loader"></li>
     </ul>
 
     <template v-if="activeQuestion && activeQuestion.componentType === 'INPUT'">
@@ -23,6 +23,7 @@ export default defineComponent({
   name: "Home",
   components: {},
   setup() {
+    const outputRef = ref<HTMLElement | null>(null);
     const output = ref<Array<string>>([]);
     const isLoading = ref(false);
     let Q = new MyQuaire({ items });
@@ -55,7 +56,7 @@ export default defineComponent({
         saveAnswer(true);
       }
     };
-    const saveAnswer = (answer: any) => {
+    const saveAnswer = (answer: unknown) => {
       Q.saveAnswer(answer);
       activeQuestion.value = Q.getActiveQuestion();
       result.value = Q.getResult();
@@ -98,6 +99,14 @@ export default defineComponent({
       }
     });
 
+    watch(
+      output,
+      () => {
+        outputRef.value?.scrollTo(0, outputRef.value?.scrollHeight + 100);
+      },
+      { deep: true }
+    );
+
     onBeforeMount(() => {
       restoreGame();
 
@@ -110,6 +119,7 @@ export default defineComponent({
     });
 
     return {
+      outputRef,
       output,
       isLoading,
       activeQuestion,
@@ -123,6 +133,14 @@ export default defineComponent({
 
 <style lang="scss">
 .home {
+  padding: 16px;
+  max-height: 95vh;
+  max-width: 100vw;
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+  scroll-margin: 0;
+  scroll-padding: 0;
+
   input {
     outline: none;
     color: rgb(50, 255, 0);
@@ -143,6 +161,11 @@ export default defineComponent({
   margin: 0;
   list-style: none;
 }
+
+.loader {
+  margin-bottom: 48px;
+}
+
 .dot-pulse {
   position: relative;
   top: 8px;

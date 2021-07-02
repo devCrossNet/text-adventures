@@ -26,7 +26,7 @@ export class MyQuaire extends Quaire<MyItem, MyQuestion> {
     selectOptions: QuaireItemOption[],
     rangeOption: QuaireRangeItemOption,
     inputOption: QuaireInputItemOption,
-    defaultValue: any
+    defaultValue: unknown
   ): MyQuestion {
     return {
       ...super._getQuestionObject(
@@ -41,7 +41,7 @@ export class MyQuaire extends Quaire<MyItem, MyQuestion> {
     };
   }
 
-  public saveAnswer(answer: any) {
+  public saveAnswer(answer: unknown): void {
     const activeQuestion = this.getActiveQuestion();
     if (activeQuestion?.componentType === MyComponentType.DIALOG) {
       this._result[activeQuestion.resultProperty] = answer;
