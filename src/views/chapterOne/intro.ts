@@ -1,5 +1,5 @@
 import { QuaireComponentType } from "quaire";
-import { MyItem } from "./MyQuaire";
+import { MyItem } from "../MyQuaire";
 import { getDialogItem } from "@/views/utils";
 
 export const introItems: Array<MyItem> = [
@@ -110,6 +110,7 @@ export const introItems: Array<MyItem> = [
       nextItemId: 7,
     }),
   },
+  // PlayerName
   {
     id: 7,
     resultProperty: "playerName",
@@ -139,32 +140,25 @@ export const introItems: Array<MyItem> = [
     resultProperty: "whereDidYouFindTheMobile",
     dependsOnResultProperties: [],
     componentType: QuaireComponentType.SINGLE_SELECT,
-    question: "Aia: Where did you find this old thing?",
+    question: ">> I need to ask you something?",
     description: "",
     required: true,
     selectOptions: [
       {
-        label: "It's actually pretty new, I just bought it last week.",
-        value: "New",
-        nextItemId: 10,
+        label: "Where did you find the mobile phone?",
+        value: "Location",
+        nextItemId: 100,
       },
       {
-        label: "It's not new, but I wouldn't call it old.",
-        value: "Aged",
-        nextItemId: 10,
+        label: "What model do you have?",
+        value: "Brand",
+        nextItemId: 200,
+      },
+      {
+        label: "Why do you call it old?",
+        value: "Age",
+        nextItemId: 300,
       },
     ],
-  },
-  {
-    ...getDialogItem({
-      id: 10,
-      resultProperty: "mobilePhoneDialog",
-      dialogOptions: [
-        "Aia: You are so funny!",
-        "Aia: They are not sold anywhere in Weynmar!",
-        "Aia: Or anywhere else in the World...",
-      ],
-      nextItemId: 11,
-    }),
   },
 ];

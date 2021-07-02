@@ -12,7 +12,10 @@
     </ul>
 
     <template v-if="activeQuestion && activeQuestion.componentType === 'INPUT'">
-      <form @submit.prevent="onInput">
+      <form
+        @submit.prevent="onInput"
+        :class="activeQuestion.question.startsWith('>>') && 'playerMessage'"
+      >
         {{ activeQuestion.question }}: <input v-model="input" />
       </form>
     </template>
@@ -21,7 +24,14 @@
       v-if="activeQuestion && activeQuestion.componentType === 'SINGLE_SELECT'"
     >
       <div class="single-select">
-        <div class="question">>> {{ activeQuestion.question }}</div>
+        <div
+          :class="[
+            'question',
+            activeQuestion.question.startsWith('>>') && 'playerMessage',
+          ]"
+        >
+          {{ activeQuestion.question }}
+        </div>
         <div class="options">
           <button
             v-for="option in activeQuestion.selectOptions"
@@ -36,6 +46,7 @@
     </template>
 
     <button class="resetGame" @click="onResetGame">Reset Game</button>
+    <button class="clearGame" @click="onClearGame">Clear</button>
   </div>
 </template>
 
@@ -133,6 +144,9 @@ export default defineComponent({
       result.value = {};
       activeQuestion.value = Q.getActiveQuestion();
     };
+    const onClearGame = () => {
+      output.value = [];
+    };
 
     watch(activeQuestion, () => {
       if (activeQuestion.value?.componentType === MyComponentType.DIALOG) {
@@ -172,6 +186,7 @@ export default defineComponent({
       onInput,
       onSingleSelect,
       onResetGame,
+      onClearGame,
     };
   },
 });
@@ -220,16 +235,16 @@ export default defineComponent({
       color: black;
     }
   }
+
+  .playerMessage {
+    color: deeppink;
+  }
 }
 
 .output {
   padding: 0;
   margin: 0;
   list-style: none;
-
-  .playerMessage {
-    color: deeppink;
-  }
 }
 
 .loader {
@@ -256,6 +271,11 @@ export default defineComponent({
 .resetGame {
   position: absolute;
   right: 32px;
+  top: 16px;
+}
+.clearGame {
+  position: absolute;
+  right: 180px;
   top: 16px;
 }
 

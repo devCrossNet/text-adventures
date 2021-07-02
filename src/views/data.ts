@@ -1,4 +1,4 @@
 import { MyItem } from "./MyQuaire";
-import { introItems } from "@/views/intro";
+import { chapterOneItems } from "@/views/chapterOne/chapterOne";
 
-export const items: Array<MyItem> = [...introItems];
+export const items: Array<MyItem> = [...chapterOneItems];
