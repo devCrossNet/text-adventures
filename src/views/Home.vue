@@ -1,15 +1,41 @@
 <template>
   <div class="home" ref="outputRef">
     <ul class="output">
-      <li v-for="(item, idx) in output" :key="idx">{{ item }}</li>
+      <li
+        v-for="(item, idx) in output"
+        :key="idx"
+        :class="item.startsWith('>>') && 'playerMessage'"
+      >
+        {{ item }}
+      </li>
       <li v-if="isLoading" class="dot-pulse loader"></li>
     </ul>
 
     <template v-if="activeQuestion && activeQuestion.componentType === 'INPUT'">
       <form @submit.prevent="onInput">
-        >> {{ activeQuestion.question }}: <input v-model="input" />
+        {{ activeQuestion.question }}: <input v-model="input" />
       </form>
     </template>
+
+    <template
+      v-if="activeQuestion && activeQuestion.componentType === 'SINGLE_SELECT'"
+    >
+      <div class="single-select">
+        <div class="question">>> {{ activeQuestion.question }}</div>
+        <div class="options">
+          <button
+            v-for="option in activeQuestion.selectOptions"
+            :key="option.value"
+            @click="onSingleSelect(option)"
+            tabindex="0"
+          >
+            {{ option.label }}
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <button class="resetGame" @click="onResetGame">Reset Game</button>
   </div>
 </template>
 
@@ -18,6 +44,7 @@ import template from "lodash.template";
 import { defineComponent, onBeforeMount, ref, watch } from "vue";
 import { MyComponentType, MyQuaire, MyQuestion } from "@/views/MyQuaire";
 import { items } from "@/views/data";
+import { QuaireItemOption } from "quaire";
 
 export default defineComponent({
   name: "Home",
@@ -36,7 +63,7 @@ export default defineComponent({
       window.localStorage.setItem("output", output.value.join("|||"));
     };
     const handleDialog = (
-      dialog: Array<string> | undefined,
+      dialog: Array<string> | unknown | undefined,
       answer: boolean
     ) => {
       if (answer) {
@@ -44,7 +71,7 @@ export default defineComponent({
       }
 
       isLoading.value = false;
-      if (dialog && dialog.length > 0) {
+      if (dialog && Array.isArray(dialog) && dialog.length > 0) {
         const line = dialog.shift();
         if (line) {
           const compiled = template(line);
@@ -71,8 +98,14 @@ export default defineComponent({
       window.localStorage.setItem("result", JSON.stringify(result.value));
     };
     const onInput = () => {
-      output.value.push(`>> ${activeQuestion.value?.question}: ${input.value}`);
+      output.value.push(`${activeQuestion.value?.question}`);
+      output.value.push(`>> ${input.value}`);
       saveAnswer(input.value);
+    };
+    const onSingleSelect = (option: QuaireItemOption) => {
+      output.value.push(`${activeQuestion.value?.question}`);
+      output.value.push(`>> ${option.label}`);
+      saveAnswer(option.value);
     };
     const restoreGame = () => {
       const outputItem = localStorage.getItem("output");
@@ -88,6 +121,17 @@ export default defineComponent({
         result.value = Q.getResult();
         activeQuestion.value = Q.getActiveQuestion();
       }
+    };
+    const onResetGame = () => {
+      output.value = [];
+      window.localStorage.removeItem("output");
+      window.localStorage.removeItem("activeQuestionId");
+      window.localStorage.removeItem("result");
+
+      Q = new MyQuaire({ items });
+
+      result.value = {};
+      activeQuestion.value = Q.getActiveQuestion();
     };
 
     watch(activeQuestion, () => {
@@ -126,6 +170,8 @@ export default defineComponent({
       result,
       input,
       onInput,
+      onSingleSelect,
+      onResetGame,
     };
   },
 });
@@ -140,6 +186,7 @@ export default defineComponent({
   scroll-behavior: smooth;
   scroll-margin: 0;
   scroll-padding: 0;
+  line-height: 28px;
 
   input {
     outline: none;
@@ -154,16 +201,62 @@ export default defineComponent({
     border: none;
     border-bottom: 1px solid rgb(50, 255, 0);
   }
+
+  button {
+    color: rgb(50, 255, 0);
+    background: black;
+    font-family: "VT323", monospace;
+    letter-spacing: 0.1em;
+    font-size: 14px;
+    -webkit-font-smoothing: none;
+    line-height: 1.2;
+    border: 2px solid rgb(50, 255, 0);
+    padding: 8px 12px;
+    cursor: pointer;
+
+    &:hover,
+    &:focus {
+      background: rgb(50, 255, 0);
+      color: black;
+    }
+  }
 }
 
 .output {
   padding: 0;
   margin: 0;
   list-style: none;
+
+  .playerMessage {
+    color: deeppink;
+  }
 }
 
 .loader {
   margin-bottom: 48px;
+}
+
+.single-select {
+  display: flex;
+  flex-direction: column;
+
+  .options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding-top: 16px;
+
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(6, 1fr);
+      gap: 24px;
+    }
+  }
+}
+
+.resetGame {
+  position: absolute;
+  right: 32px;
+  top: 16px;
 }
 
 .dot-pulse {
@@ -178,7 +271,6 @@ export default defineComponent({
   animation: dotPulse 1.5s infinite linear;
   animation-delay: 0.25s;
 }
-
 .dot-pulse::before,
 .dot-pulse::after {
   content: "";
@@ -190,19 +282,16 @@ export default defineComponent({
   background-color: rgb(50, 255, 0);
   color: rgb(50, 255, 0);
 }
-
 .dot-pulse::before {
   box-shadow: 9984px 0 0 -5px rgb(50, 255, 0);
   animation: dotPulseBefore 1.5s infinite linear;
   animation-delay: 0s;
 }
-
 .dot-pulse::after {
   box-shadow: 10014px 0 0 -5px rgb(50, 255, 0);
   animation: dotPulseAfter 1.5s infinite linear;
   animation-delay: 0.5s;
 }
-
 @keyframes dotPulseBefore {
   0% {
     box-shadow: 9984px 0 0 -5px rgb(50, 255, 0);
@@ -215,7 +304,6 @@ export default defineComponent({
     box-shadow: 9984px 0 0 -5px rgb(50, 255, 0);
   }
 }
-
 @keyframes dotPulse {
   0% {
     box-shadow: 9999px 0 0 -5px rgb(50, 255, 0);
@@ -228,7 +316,6 @@ export default defineComponent({
     box-shadow: 9999px 0 0 -5px rgb(50, 255, 0);
   }
 }
-
 @keyframes dotPulseAfter {
   0% {
     box-shadow: 10014px 0 0 -5px rgb(50, 255, 0);
