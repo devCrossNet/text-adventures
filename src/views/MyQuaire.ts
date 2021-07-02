@@ -7,14 +7,16 @@ import {
   QuaireRangeItemOption,
 } from "quaire";
 
+export enum MyComponentType {
+  DIALOG = "DIALOG",
+}
+
 export interface MyItem extends QuaireItem {
-  isMonologue?: boolean;
-  monologue?: Array<string>;
+  dialogOptions?: Array<string>;
 }
 
 export interface MyQuestion extends QuaireQuestion {
-  isMonologue?: boolean;
-  monologue?: Array<string>;
+  dialogOptions?: Array<string>;
 }
 
 export class MyQuaire extends Quaire<MyItem, MyQuestion> {
@@ -35,8 +37,17 @@ export class MyQuaire extends Quaire<MyItem, MyQuestion> {
         inputOption,
         defaultValue
       ),
-      isMonologue: item.isMonologue,
-      monologue: item.monologue,
+      dialogOptions: item.dialogOptions,
     };
+  }
+
+  public saveAnswer(answer: any) {
+    const activeQuestion = this.getActiveQuestion();
+    if (activeQuestion?.componentType === MyComponentType.DIALOG) {
+      this._result[activeQuestion.resultProperty] = answer;
+      this._activeItemId = activeQuestion?.nextItemId || 1;
+    } else {
+      super.saveAnswer(answer);
+    }
   }
 }

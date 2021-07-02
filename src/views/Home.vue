@@ -5,11 +5,7 @@
       <li v-if="isLoading" class="dot-pulse"></li>
     </ul>
 
-    <template
-      v-if="
-        !activeQuestion.isMonologue && activeQuestion.componentType === 'INPUT'
-      "
-    >
+    <template v-if="activeQuestion && activeQuestion.componentType === 'INPUT'">
       <form @submit.prevent="onInput">
         >> {{ activeQuestion.question }}: <input v-model="input" />
       </form>
@@ -19,8 +15,8 @@
 
 <script lang="ts">
 import template from "lodash.template";
-import { defineComponent, ref, watch } from "vue";
-import { MyQuaire, MyQuestion } from "@/views/MyQuaire";
+import { defineComponent, onBeforeMount, ref, watch } from "vue";
+import { MyComponentType, MyQuaire, MyQuestion } from "@/views/MyQuaire";
 import { items } from "@/views/data";
 
 export default defineComponent({
@@ -29,20 +25,31 @@ export default defineComponent({
   setup() {
     const output = ref<Array<string>>([]);
     const isLoading = ref(false);
-    const Q = new MyQuaire({ items });
+    let Q = new MyQuaire({ items });
     const activeQuestion = ref<MyQuestion | null>(Q.getActiveQuestion());
     const result = ref(Q.getResult());
-    const handleMonologue = (monologue: Array<string> | undefined) => {
+    const input = ref("");
+
+    const addToOutput = (line: string) => {
+      output.value.push(line);
+      window.localStorage.setItem("output", output.value.join("|||"));
+    };
+    const handleDialog = (
+      dialog: Array<string> | undefined,
+      answer: boolean
+    ) => {
+      if (answer) {
+        return;
+      }
+
       isLoading.value = false;
-
-      if (monologue && monologue.length > 0) {
-        const line = monologue.shift();
-
+      if (dialog && dialog.length > 0) {
+        const line = dialog.shift();
         if (line) {
           const compiled = template(line);
-          output.value.push(compiled(result.value));
+          addToOutput(compiled(result.value));
           isLoading.value = true;
-          setTimeout(() => handleMonologue(monologue), line.length * 100);
+          setTimeout(() => handleDialog(dialog, answer), line.length * 80);
         }
       } else {
         saveAnswer(true);
@@ -52,22 +59,55 @@ export default defineComponent({
       Q.saveAnswer(answer);
       activeQuestion.value = Q.getActiveQuestion();
       result.value = Q.getResult();
+
+      if (activeQuestion.value) {
+        window.localStorage.setItem(
+          "activeQuestionId",
+          activeQuestion.value?.id.toString() || "1"
+        );
+      }
+
+      window.localStorage.setItem("result", JSON.stringify(result.value));
     };
-    const input = ref("");
     const onInput = () => {
       output.value.push(`>> ${activeQuestion.value?.question}: ${input.value}`);
       saveAnswer(input.value);
     };
+    const restoreGame = () => {
+      const outputItem = localStorage.getItem("output");
+      const activeQuestionIdItem = localStorage.getItem("activeQuestionId");
+      const resultItem = localStorage.getItem("result");
 
-    watch(
-      activeQuestion,
-      () => {
-        if (activeQuestion.value?.isMonologue) {
-          handleMonologue(activeQuestion.value?.monologue);
-        }
-      },
-      { immediate: true }
-    );
+      if (outputItem && activeQuestionIdItem && result) {
+        output.value = outputItem.split("|||");
+
+        Q = new MyQuaire({ items, result: JSON.parse(resultItem || "{}") });
+        Q.setActiveQuestionByQuestionId(parseInt(activeQuestionIdItem, 10));
+
+        result.value = Q.getResult();
+        activeQuestion.value = Q.getActiveQuestion();
+      }
+    };
+
+    watch(activeQuestion, () => {
+      if (activeQuestion.value?.componentType === MyComponentType.DIALOG) {
+        handleDialog(
+          activeQuestion.value?.dialogOptions,
+          result.value[activeQuestion.value.resultProperty]
+        );
+      }
+    });
+
+    onBeforeMount(() => {
+      restoreGame();
+
+      if (activeQuestion.value?.componentType === MyComponentType.DIALOG) {
+        handleDialog(
+          activeQuestion.value?.dialogOptions,
+          result.value[activeQuestion.value.resultProperty]
+        );
+      }
+    });
 
     return {
       output,
