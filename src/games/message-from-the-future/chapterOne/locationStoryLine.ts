@@ -1,5 +1,5 @@
-import { MyItem } from "../MyQuaire";
-import { getDialogItem } from "@/views/utils";
+import { MyItem } from "../../../views/MyQuaire";
+import { getDialogItem } from "@/utils";
 
 export const locationStoryLineItems: Array<MyItem> = [
   {

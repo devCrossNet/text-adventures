@@ -104,4 +104,27 @@ body {
   -webkit-font-smoothing: none;
   line-height: 1.2;
 }
+
+.playerMessage {
+  color: deeppink;
+}
+
+button {
+  color: rgb(50, 255, 0);
+  background: black;
+  font-family: "VT323", monospace;
+  letter-spacing: 0.1em;
+  font-size: 14px;
+  -webkit-font-smoothing: none;
+  line-height: 1.2;
+  border: 2px solid rgb(50, 255, 0);
+  padding: 8px 12px;
+  cursor: pointer;
+
+  &:hover,
+  &:focus {
+    background: rgb(50, 255, 0);
+    color: black;
+  }
+}
 </style>
