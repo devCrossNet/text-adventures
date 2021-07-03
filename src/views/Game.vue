@@ -93,7 +93,6 @@ export default defineComponent({
       window.localStorage.setItem("result", JSON.stringify(result.value));
     };
     const onInput = (answer: string) => {
-      console.log(answer);
       output.value.push(`${activeQuestion.value?.question}`);
       output.value.push(`>> ${answer}`);
       saveAnswer(answer);
@@ -139,23 +138,24 @@ export default defineComponent({
     const onClearGame = () => {
       output.value = [];
     };
+    const scrollToBottom = async () => {
+      outputRef.value?.focus();
+      await sleep(100);
+      outputRef.value?.scrollTo(0, outputRef.value?.scrollHeight + 100);
+    };
 
-    watch(activeQuestion, () => {
+    watch(activeQuestion, async () => {
       if (activeQuestion.value?.componentType === MyComponentType.DIALOG) {
         handleDialog(
           activeQuestion.value?.dialogOptions,
           result.value[activeQuestion.value.resultProperty]
         );
       }
+
+      await scrollToBottom();
     });
 
-    watch(
-      output,
-      () => {
-        outputRef.value?.scrollTo(0, outputRef.value?.scrollHeight + 100);
-      },
-      { deep: true }
-    );
+    watch(output, async () => await scrollToBottom, { deep: true });
 
     onBeforeMount(async () => {
       const game = await import(
@@ -167,7 +167,7 @@ export default defineComponent({
 
       isInitializing.value = false;
 
-      await sleep(2000);
+      await sleep(1000);
 
       restoreGame();
 
@@ -177,6 +177,8 @@ export default defineComponent({
           result.value[activeQuestion.value.resultProperty]
         );
       }
+
+      await scrollToBottom();
     });
 
     return {

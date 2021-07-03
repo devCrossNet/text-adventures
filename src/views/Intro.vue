@@ -5,13 +5,14 @@
     <div>Please select a Game!</div>
 
     <div class="games">
-      <router-link
+      <button
+        tabindex="0"
         v-for="game in games"
-        :to="`/game/${game.id}`"
+        @click="$router.push(`/game/${game.id}`)"
         :key="game.id"
       >
         {{ game.name }}
-      </router-link>
+      </button>
     </div>
 
     <div class="footer">
@@ -55,6 +56,7 @@ export default defineComponent({
 
   h1 {
     margin: 48px 0;
+    line-height: 40px;
   }
 
   .games {
