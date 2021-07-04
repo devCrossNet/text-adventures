@@ -1,6 +1,6 @@
 import { MyComponentType, MyItem } from "@/views/MyQuaire";
 
-export const sleep = (ms: number): Promise<any> => {
+export const sleep = (ms: number): Promise<unknown> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
