@@ -17,7 +17,7 @@
 
     <div class="footer">
       <a
-        href="https://github.com/devCrossNet/game"
+        href="https://github.com/devCrossNet/text-adventures"
         rel="noopener"
         target="_blank"
       >
