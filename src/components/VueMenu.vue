@@ -1,27 +1,21 @@
 <template>
   <div :class="['menu', open && 'open']">
     <div class="buttons">
-      <button
-        class="clearGame"
-        @click="open = !open"
-        :aria-label="open ? 'Close' : 'Open'"
-      >
-        {{ open ? "X" : "M" }}
+      <button class="clearGame" @click="open = !open" :aria-label="open ? 'Close' : 'Open'">
+        {{ open ? 'X' : 'M' }}
       </button>
       <button class="clearGame" @click="$emit('clear')">Clear</button>
       <button class="resetGame" @click="$emit('reset')">Reset Game</button>
-      <button class="resetGame" @click="$router.push('/')">
-        Back to Start
-      </button>
+      <button class="resetGame" @click="$router.push('/')">Back to Start</button>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref } from 'vue';
 
 export default defineComponent({
-  name: "VueMenu",
+  name: 'VueMenu',
   setup() {
     const open = ref(false);
 
