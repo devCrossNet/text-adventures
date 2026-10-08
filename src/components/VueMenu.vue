@@ -9,6 +9,9 @@
       <button class="toggleSound wide" @click="soundEnabled = !soundEnabled" :aria-pressed="soundEnabled">
         Sound: {{ soundEnabled ? 'On' : 'Off' }}
       </button>
+      <button class="toggleTimers wide" @click="timersEnabled = !timersEnabled" :aria-pressed="timersEnabled">
+        Timer: {{ timersEnabled ? 'On' : 'Off' }}
+      </button>
       <button class="resetGame wide" @click="$router.push('/')">Back to Start</button>
     </div>
   </div>
@@ -16,7 +19,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { soundEnabled } from '@/sounds';
+import { soundEnabled, timersEnabled } from '@/settings';
 
 export default defineComponent({
   name: 'VueMenu',
@@ -26,6 +29,7 @@ export default defineComponent({
     return {
       open,
       soundEnabled,
+      timersEnabled,
     };
   },
 });

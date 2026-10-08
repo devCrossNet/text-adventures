@@ -1,24 +1,4 @@
-import { ref, watch } from 'vue';
-
-const STORAGE_KEY = 'sound';
-
-const loadSoundEnabled = () => {
-  try {
-    return localStorage.getItem(STORAGE_KEY) !== 'off';
-  } catch {
-    return true;
-  }
-};
-
-export const soundEnabled = ref(loadSoundEnabled());
-
-watch(soundEnabled, (enabled) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, enabled ? 'on' : 'off');
-  } catch {
-    // the sound setting is only a convenience
-  }
-});
+import { soundEnabled } from './settings';
 
 let context: AudioContext | null = null;
 
