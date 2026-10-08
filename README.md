@@ -6,35 +6,50 @@ This is a demo how to use the [quaire-library](https://github.com/devCrossNet/qu
 
 **_Fell free to create pull-requests with your very own Game story!_**
 
+## Requirements
+
+- Node.js >= 22.12
+- npm 11
+
 ## Project setup
-```
+
+```shell
 npm install
 ```
 
-### Compiles and hot-reloads for development
-```
-npm run serve
+### Start the development server
+
+```shell
+npm run dev
 ```
 
-### Compiles and minifies for production
-```
+### Build for production
+
+```shell
 npm run build
+npm run preview
 ```
 
-### Run your unit tests
-```
-npm run test:unit
+### Run the tests
+
+```shell
+npm test
 ```
 
-### Run your end-to-end tests
-```
-npm run test:e2e
-```
+### Type check, lint, and format
 
-### Lints and fixes files
-```
+```shell
+npm run typecheck
 npm run lint
+npm run prettier
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+`npm run test:release` runs all checks. The pre-commit hook runs it, too.
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
+
+## Create your own game
+
+A game is a list of [quaire](https://github.com/devCrossNet/quaire) question definitions in `src/games/<game-id>/index.ts`.
+Besides the built-in types (e.g. `SINGLE_SELECT` and `INPUT`), games can use the `DIALOG` type from `src/quaire.ts`.
+A dialog prints its `lines`, and `<%= key %>` inserts a former answer.
+Add a test with `validateDefinition()` to find mistakes in your data, see `tests/unit/games`.
