@@ -2,59 +2,50 @@
   "name": "text-adventures",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "test:unit": "vue-cli-service test:unit",
-    "test:e2e": "vue-cli-service test:e2e",
-    "lint": "vue-cli-service lint"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run --coverage",
+    "typecheck": "vue-tsc --noEmit",
+    "prettier": "prettier --write .",
+    "prettier:staged": "pretty-quick",
+    "lint": "eslint . --fix --cache",
+    "test:release": "npm run typecheck && npm test && npm run lint && npm run prettier",
+    "prepare": "husky"
   },
   "dependencies": {
-    "core-js": "^3.6.5",
-    "lodash.get": "^4.4.2",
-    "lodash.template": "^4.5.0",
-    "quaire": "^0.1.0",
-    "register-service-worker": "^1.7.1",
-    "vue": "^3.0.0",
-    "vue-router": "^4.0.0-0",
-    "vuex": "^4.0.0-0"
+    "quaire": "^1.0.0",
+    "vue": "^3.5.43",
+    "vue-router": "^5.4.0"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.19",
-    "@types/lodash.get": "^4.4.6",
-    "@types/lodash.template": "^4.5.0",
-    "@typescript-eslint/eslint-plugin": "^4.18.0",
-    "@typescript-eslint/parser": "^4.18.0",
-    "@vue/cli-plugin-babel": "~4.5.0",
-    "@vue/cli-plugin-e2e-cypress": "~4.5.0",
-    "@vue/cli-plugin-eslint": "~4.5.0",
-    "@vue/cli-plugin-pwa": "~4.5.0",
-    "@vue/cli-plugin-router": "~4.5.0",
-    "@vue/cli-plugin-typescript": "~4.5.0",
-    "@vue/cli-plugin-unit-jest": "~4.5.0",
-    "@vue/cli-plugin-vuex": "~4.5.0",
-    "@vue/cli-service": "~4.5.0",
-    "@vue/compiler-sfc": "^3.0.0",
-    "@vue/eslint-config-prettier": "^6.0.0",
-    "@vue/eslint-config-typescript": "^7.0.0",
-    "@vue/test-utils": "^2.0.0-0",
-    "eslint": "^6.7.2",
-    "eslint-plugin-prettier": "^3.3.1",
-    "eslint-plugin-vue": "^7.0.0",
-    "lint-staged": "^9.5.0",
-    "prettier": "^2.2.1",
-    "sass": "^1.26.5",
-    "sass-loader": "^8.0.2",
-    "typescript": "~4.1.5",
-    "vue-jest": "^5.0.0-0"
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.5",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "@vitest/coverage-v8": "^5.0.3",
+    "@vue/test-utils": "^2.5.1",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.11.1",
+    "globals": "^17.13.0",
+    "husky": "^9.1.7",
+    "jsdom": "^30.1.2",
+    "prettier": "^3.9.9",
+    "pretty-quick": "^4.2.2",
+    "sass-embedded": "^1.105.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.1",
+    "vite": "^8.3.4",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.0.3",
+    "vue-tsc": "^3.3.12",
+    "workbox-window": "^7.4.1"
   },
-  "gitHooks": {
-    "pre-commit": "lint-staged"
-  },
-  "lint-staged": {
-    "*.{js,jsx,vue,ts,tsx}": [
-      "vue-cli-service lint",
-      "git add"
-    ]
+  "engines": {
+    "node": ">=22.12"
   }
 }

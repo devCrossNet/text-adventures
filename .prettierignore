@@ -1,0 +1,9 @@
+*.yml
+.claude
+.idea
+node_modules
+coverage
+dist
+dev-dist
+public
+package-lock.json

@@ -1,0 +1,1 @@
+npm run prettier:staged && npm run test:release
