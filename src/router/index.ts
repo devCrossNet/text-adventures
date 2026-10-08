@@ -1,21 +1,20 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 
 const routes: Array<RouteRecordRaw> = [
   {
-    path: "/",
-    name: "Intro",
-    component: () =>
-      import(/* webpackChunkName: "intro" */ "../views/Intro.vue"),
+    path: '/',
+    name: 'Intro',
+    component: () => import('../views/Intro.vue'),
   },
   {
-    path: "/game/:id",
-    name: "Game",
-    component: () => import(/* webpackChunkName: "game" */ "../views/Game.vue"),
+    path: '/game/:id',
+    name: 'Game',
+    component: () => import('../views/Game.vue'),
   },
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
 
