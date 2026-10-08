@@ -1,17 +1,12 @@
 <template>
   <div class="single-select">
-    <div
-      :class="[
-        'question',
-        activeQuestion.question.startsWith('>>') && 'playerMessage',
-      ]"
-    >
-      {{ activeQuestion.question }}
+    <div :class="['question', activeQuestion.title.startsWith('>>') && 'playerMessage']">
+      {{ activeQuestion.title }}
     </div>
     <div class="options">
       <button
-        v-for="option in activeQuestion.selectOptions"
-        :key="option.value"
+        v-for="option in activeQuestion.options"
+        :key="String(option.value)"
         @click="$emit('onSubmit', option)"
         tabindex="0"
       >
@@ -22,13 +17,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import { MyQuestion } from "@/views/MyQuaire";
+import { defineComponent, type PropType } from 'vue';
+import type { QuaireQuestion, QuaireSingleSelectDefinition } from 'quaire';
 
 export default defineComponent({
-  name: "VueSingleSelect",
+  name: 'VueSingleSelect',
   props: {
-    activeQuestion: { type: Object as () => MyQuestion, required: true },
+    activeQuestion: { type: Object as PropType<QuaireQuestion<QuaireSingleSelectDefinition>>, required: true },
   },
 });
 </script>

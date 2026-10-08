@@ -1,8 +1,12 @@
-import { MyItem } from "../../../views/MyQuaire";
-import { introItems } from "@/games/message-from-the-future/chapterOne/intro";
-import { locationStoryLineItems } from "@/games/message-from-the-future/chapterOne/locationStoryLine";
+import type { GameQuestionDefinition } from '@/quaire';
+import { ageStoryLineQuestions } from './ageStoryLine';
+import { brandStoryLineQuestions } from './brandStoryLine';
+import { introQuestions } from './intro';
+import { locationStoryLineQuestions } from './locationStoryLine';
 
-export const chapterOneItems: Array<MyItem> = [
-  ...introItems,
-  ...locationStoryLineItems,
+export const chapterOneQuestions: Array<GameQuestionDefinition> = [
+  ...introQuestions,
+  ...locationStoryLineQuestions,
+  ...brandStoryLineQuestions,
+  ...ageStoryLineQuestions,
 ];
