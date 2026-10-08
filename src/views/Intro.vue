@@ -5,40 +5,29 @@
     <div>Please select a Game!</div>
 
     <div class="games">
-      <button
-        tabindex="0"
-        v-for="game in games"
-        @click="$router.push(`/game/${game.id}`)"
-        :key="game.id"
-      >
+      <button tabindex="0" v-for="game in games" @click="$router.push(`/game/${game.id}`)" :key="game.id">
         {{ game.name }}
       </button>
     </div>
 
     <div class="footer">
-      <a
-        href="https://github.com/devCrossNet/text-adventures"
-        rel="noopener"
-        target="_blank"
-      >
-        GitHub
-      </a>
+      <a href="https://github.com/devCrossNet/text-adventures" rel="noopener" target="_blank"> GitHub </a>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from "vue";
+import { computed, defineComponent } from 'vue';
 
 export default defineComponent({
-  name: "IntroPage",
+  name: 'IntroPage',
   components: {},
   setup() {
     return {
       games: computed(() => [
         {
-          name: "Message From The Future",
-          id: "message-from-the-future",
+          name: 'Message From The Future',
+          id: 'message-from-the-future',
         },
       ]),
     };
@@ -68,7 +57,7 @@ export default defineComponent({
     a {
       color: rgb(50, 255, 0);
       background: black;
-      font-family: "VT323", monospace;
+      font-family: 'VT323', monospace;
       letter-spacing: 0.1em;
       font-size: 14px;
       -webkit-font-smoothing: none;
