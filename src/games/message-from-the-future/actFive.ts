@@ -1,0 +1,118 @@
+import { type GameQuestionDefinition, getDialog } from '@/quaire';
+import { getWarmth, WARMTH_TO_GO_OUTSIDE } from './warmth';
+
+// Act 5: they come back, and Aia has to get away
+export const actFiveQuestions: Array<GameQuestionDefinition> = [
+  getDialog({
+    id: 'escape',
+    key: 'escape',
+    lines: [
+      '[[silence:3000]]',
+      'Aia: The knocking moved.',
+      "Aia: It's at the kitchen window now.",
+      '[[knock]]',
+      'Aia: Now at the back door.',
+      "Aia: <%= playerName %>, there's more than one voice.",
+      '!!Mrs. Okafor: open the door, dear. we only want to talk.',
+      "Aia: That's Mrs. Okafor. From next door.",
+      'Aia: Her house has been dark for a month.',
+      'Aia: Battery at 3%.',
+    ],
+    next: 'escapeChoice',
+  }),
+  {
+    id: 'escapeChoice',
+    key: 'escapeChoice',
+    type: 'TIMED_SELECT',
+    title: 'Aia: Where do I go??',
+    required: true,
+    seconds: 10,
+    options: [
+      { label: 'The attic! Lock the hatch.', value: 'attic', next: 'attic' },
+      { label: 'Run! Out the front door, now!', value: 'run' },
+      { label: 'Stay with me. Keep typing.', value: 'stay', next: 'stayWithMe' },
+      { label: "You didn't answer.", value: 'freeze', next: 'frozen', timeout: true },
+    ],
+    // Aia only dares to run when she trusts the player
+    next: [{ when: (result) => getWarmth(result) >= WARMTH_TO_GO_OUTSIDE, to: 'outside' }, { to: 'tooAfraid' }],
+  },
+  getDialog({
+    id: 'attic',
+    key: 'attic',
+    lines: [
+      'Aia: The attic. Yes.',
+      "Aia: I'm climbing up. Pulling the ladder up behind me.",
+      'Aia: The hatch is locked.',
+      '[[silence:3000]]',
+      "Aia: They're inside the house.",
+      'Aia: I can hear them walking around downstairs. Calling.',
+      "Aia: 1%. Write me something. Something real. I'll keep it.",
+    ],
+    next: 'lastMessage',
+  }),
+  {
+    id: 'lastMessage',
+    key: 'lastMessage',
+    type: 'INPUT',
+    title: 'Your last message to Aia',
+    required: true,
+    next: 'atticEnd',
+  },
+  getDialog({
+    id: 'atticEnd',
+    key: 'atticEnd',
+    lines: [
+      'Aia: "<%= lastMessage %>"',
+      "Aia: I'm saying it out loud. Over and over.",
+      "Aia: They can't copy that. They can't copy you.",
+      '[[knock]]',
+      "Aia: They're right under the hatch.",
+      'Aia: Goodbye, <%= playerName %>.',
+      '[Connection lost.]',
+      '[[silence:5000]]',
+      '[1 new message from: Aia]',
+      "Aia: It's morning. They left at sunrise.",
+      "Aia: Say my name. So I know it's really you.",
+    ],
+    next: 'sayHerName',
+  }),
+  {
+    id: 'sayHerName',
+    key: 'sayHerName',
+    type: 'INPUT',
+    title: 'Say her name',
+    required: true,
+    next: [
+      { when: (result) => String(result.sayHerName).trim().toLowerCase() === 'aia', to: 'survived' },
+      { to: 'notHer' },
+    ],
+  },
+  getDialog({
+    id: 'stayWithMe',
+    key: 'stayWithMe',
+    lines: [
+      "Aia: Okay. I'm staying right here.",
+      'Aia: Talking to you.',
+      '[[knock]]',
+      '[[knock]]',
+      "Aia: They're everywhere. Every window.",
+      "Aia: There's only one way they stop knocking.",
+      'Aia: If I go in. Into the Quiet.',
+      'Aia: I just have to close my eyes. I can feel it pulling.',
+      'Aia: Mila is in there. Maybe the real Mila.',
+    ],
+    next: 'rememberHer',
+  }),
+  {
+    id: 'rememberHer',
+    key: 'rememberHer',
+    type: 'SINGLE_SELECT',
+    title: 'Aia: Will you remember me?',
+    required: true,
+    options: [
+      { label: 'Always.', value: 'always' },
+      { label: "I'll try.", value: 'try' },
+    ],
+    next: 'goodbyeEnd',
+  },
+];

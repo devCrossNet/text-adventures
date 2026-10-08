@@ -29,4 +29,66 @@ describe('VueSingleSelect.vue', () => {
 
     expect(wrapper.emitted('onSubmit')).toEqual([[options[1]]]);
   });
+
+  test('should count down and submit the timeout option', async () => {
+    vi.useFakeTimers();
+    const timeout = { label: "You didn't answer.", value: 'noAnswer', timeout: true };
+    const wrapper = mount(VueSingleSelect, {
+      props: {
+        activeQuestion: {
+          id: 'knockChoice',
+          type: 'TIMED_SELECT',
+          key: 'knockChoice',
+          title: 'Aia: What do I do??',
+          seconds: 2,
+          options: [{ label: 'Hide!', value: 'hide' }, timeout],
+          value: undefined,
+          error: null,
+          isValid: true,
+          hasValue: false,
+        },
+      },
+    });
+
+    expect(wrapper.findAll('button').map((button) => button.text())).toEqual(['Hide!']);
+    expect(wrapper.find('[role="progressbar"]').text()).toBe('2s');
+
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(wrapper.find('[role="progressbar"]').text()).toBe('1s');
+    expect(wrapper.emitted('onTimeout')).toBeUndefined();
+
+    await vi.advanceTimersByTimeAsync(500);
+    expect(wrapper.emitted('onTimeout')).toEqual([[timeout]]);
+    vi.useRealTimers();
+  });
+
+  test('should stop the countdown when the player answers', async () => {
+    vi.useFakeTimers();
+    const wrapper = mount(VueSingleSelect, {
+      props: {
+        activeQuestion: {
+          id: 'knockChoice',
+          type: 'TIMED_SELECT',
+          key: 'knockChoice',
+          title: 'Aia: What do I do??',
+          seconds: 2,
+          options: [
+            { label: 'Hide!', value: 'hide' },
+            { label: "You didn't answer.", value: 'noAnswer', timeout: true },
+          ],
+          value: undefined,
+          error: null,
+          isValid: true,
+          hasValue: false,
+        },
+      },
+    });
+
+    await wrapper.find('button').trigger('click');
+    await vi.advanceTimersByTimeAsync(3000);
+
+    expect(wrapper.emitted('onSubmit')).toHaveLength(1);
+    expect(wrapper.emitted('onTimeout')).toBeUndefined();
+    vi.useRealTimers();
+  });
 });
