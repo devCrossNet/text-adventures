@@ -79,7 +79,8 @@ describe('sounds', () => {
   test('should be silent when the sound is off', async () => {
     const { FakeAudioContext, created } = createFakeAudioContext();
     vi.stubGlobal('AudioContext', FakeAudioContext);
-    const { playKnock, playStatic, soundEnabled } = await import('@/sounds');
+    const { playKnock, playStatic } = await import('@/sounds');
+    const { soundEnabled } = await import('@/settings');
 
     soundEnabled.value = false;
     await nextTick();
@@ -92,7 +93,7 @@ describe('sounds', () => {
 
   test('should remember that the sound is off', async () => {
     localStorage.setItem('sound', 'off');
-    const { soundEnabled } = await import('@/sounds');
+    const { soundEnabled } = await import('@/settings');
 
     expect(soundEnabled.value).toBe(false);
   });

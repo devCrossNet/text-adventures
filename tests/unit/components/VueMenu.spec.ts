@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import VueMenu from '@/components/VueMenu.vue';
-import { soundEnabled } from '@/sounds';
+import { soundEnabled, timersEnabled } from '@/settings';
 
 describe('VueMenu.vue', () => {
   const push = vi.fn();
@@ -33,5 +33,19 @@ describe('VueMenu.vue', () => {
     expect(button.text()).toBe('Sound: Off');
     expect(button.attributes('aria-pressed')).toBe('false');
     expect(soundEnabled.value).toBe(false);
+  });
+
+  test('should switch the timers on and off', async () => {
+    timersEnabled.value = true;
+    const wrapper = mountMenu();
+    const button = wrapper.find('.toggleTimers');
+
+    expect(button.text()).toBe('Timer: On');
+
+    await button.trigger('click');
+
+    expect(button.text()).toBe('Timer: Off');
+    expect(timersEnabled.value).toBe(false);
+    expect(localStorage.getItem('timers')).toBe('off');
   });
 });

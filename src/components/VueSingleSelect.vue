@@ -26,6 +26,7 @@
 import { computed, defineComponent, onMounted, onUnmounted, ref, type PropType } from 'vue';
 import type { QuaireQuestion, QuaireSelectOption, QuaireSingleSelectDefinition } from 'quaire';
 import { isTimeoutOption, type TimedSelectDefinition } from '@/quaire';
+import { timersEnabled } from '@/settings';
 
 const TICK = 100;
 
@@ -39,7 +40,8 @@ export default defineComponent({
   },
   emits: ['onSubmit', 'onTimeout'],
   setup(props, { emit }) {
-    const seconds = props.activeQuestion.type === 'TIMED_SELECT' ? props.activeQuestion.seconds : 0;
+    const seconds =
+      props.activeQuestion.type === 'TIMED_SELECT' && timersEnabled.value ? props.activeQuestion.seconds : 0;
     const remaining = ref(seconds * 1000);
     const options = computed(() => props.activeQuestion.options.filter((option) => !isTimeoutOption(option)));
     let timer: ReturnType<typeof setInterval> | undefined;

@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
 import VueSingleSelect from '@/components/VueSingleSelect.vue';
+import { timersEnabled } from '@/settings';
 
 describe('VueSingleSelect.vue', () => {
   test('should submit the selected option', async () => {
@@ -89,6 +90,38 @@ describe('VueSingleSelect.vue', () => {
 
     expect(wrapper.emitted('onSubmit')).toHaveLength(1);
     expect(wrapper.emitted('onTimeout')).toBeUndefined();
+    vi.useRealTimers();
+  });
+
+  test('should wait for the player when the timers are off', async () => {
+    vi.useFakeTimers();
+    timersEnabled.value = false;
+    const wrapper = mount(VueSingleSelect, {
+      props: {
+        activeQuestion: {
+          id: 'knockChoice',
+          type: 'TIMED_SELECT',
+          key: 'knockChoice',
+          title: 'Aia: What do I do??',
+          seconds: 2,
+          options: [
+            { label: 'Hide!', value: 'hide' },
+            { label: "You didn't answer.", value: 'noAnswer', timeout: true },
+          ],
+          value: undefined,
+          error: null,
+          isValid: true,
+          hasValue: false,
+        },
+      },
+    });
+
+    await vi.advanceTimersByTimeAsync(5000);
+
+    expect(wrapper.find('[role="progressbar"]').exists()).toBe(false);
+    expect(wrapper.emitted('onTimeout')).toBeUndefined();
+    expect(wrapper.findAll('button').map((button) => button.text())).toEqual(['Hide!']);
+    timersEnabled.value = true;
     vi.useRealTimers();
   });
 });
