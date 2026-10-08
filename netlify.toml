@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# single page app: vue-router handles all routes, e.g. /game/:id
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
