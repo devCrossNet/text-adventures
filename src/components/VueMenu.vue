@@ -6,13 +6,17 @@
       </button>
       <button class="clearGame" @click="$emit('clear')">Clear</button>
       <button class="resetGame" @click="$emit('reset')">Reset Game</button>
-      <button class="resetGame" @click="$router.push('/')">Back to Start</button>
+      <button class="toggleSound wide" @click="soundEnabled = !soundEnabled" :aria-pressed="soundEnabled">
+        Sound: {{ soundEnabled ? 'On' : 'Off' }}
+      </button>
+      <button class="resetGame wide" @click="$router.push('/')">Back to Start</button>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
+import { soundEnabled } from '@/sounds';
 
 export default defineComponent({
   name: 'VueMenu',
@@ -21,6 +25,7 @@ export default defineComponent({
 
     return {
       open,
+      soundEnabled,
     };
   },
 });
@@ -59,7 +64,7 @@ export default defineComponent({
       button {
         display: inline-block;
 
-        &:last-child {
+        &.wide {
           grid-column-start: 1;
           grid-column-end: 4;
         }

@@ -1,5 +1,5 @@
 <template>
-  <div class="home" ref="outputRef">
+  <div :class="['home', isFlickering && 'flicker']" ref="outputRef">
     <template v-if="isInitializing === false">
       <vue-menu @reset="onResetGame" @clear="onClearGame" />
       <vue-output :output="output" :is-typing="isTyping" />
@@ -10,10 +10,11 @@
         @onSubmit="onInput"
       />
       <vue-single-select
-        v-if="activeQuestion?.type === 'SINGLE_SELECT'"
+        v-if="activeQuestion?.type === 'SINGLE_SELECT' || activeQuestion?.type === 'TIMED_SELECT'"
         :key="activeQuestion.id"
         :active-question="activeQuestion"
         @onSubmit="onSingleSelect"
+        @onTimeout="onTimeout"
       />
       <div v-if="ending && !isTyping" class="ending">{{ ending }}</div>
     </template>
@@ -33,7 +34,10 @@ import VueMenu from '@/components/VueMenu.vue';
 import VueOutput from '@/components/VueOutput.vue';
 import VueLoader from '@/components/VueLoader.vue';
 import { useRoute } from 'vue-router';
-import { interpolate, sleep } from '@/utils';
+import { type Effect, getClock, GLITCH_PREFIX, interpolate, parseEffect, sleep } from '@/utils';
+import { playKnock, playStatic } from '@/sounds';
+
+const DELAY_PER_CHARACTER = 80;
 
 export default defineComponent({
   name: 'GamePage',
@@ -45,6 +49,7 @@ export default defineComponent({
     const output = ref<Array<string>>([]);
     const isTyping = ref(false);
     const isInitializing = ref(true);
+    const isFlickering = ref(false);
     let Q = createQuaire(questions);
     const state = shallowRef(Q.getState());
     let unsubscribe = Q.subscribe((newState) => (state.value = newState));
@@ -74,6 +79,33 @@ export default defineComponent({
       Q.saveAnswer(answer);
       window.localStorage.setItem('result', JSON.stringify(Q.getResult()));
     };
+    const flicker = () => {
+      isFlickering.value = true;
+      setTimeout(() => (isFlickering.value = false), 800);
+    };
+    // plays an effect and returns how long the dialog waits after it
+    const playEffect = (effect: Effect): number => {
+      switch (effect.name) {
+        case 'knock':
+          playKnock();
+          addToOutput(`${GLITCH_PREFIX}*knock* *knock* *knock*`);
+          return 1800;
+        case 'static':
+          playStatic();
+          flicker();
+          return 1200;
+        case 'flicker':
+          flicker();
+          return 800;
+        case 'pause':
+          // "Aia is typing" without a message
+          isTyping.value = true;
+          return effect.duration ?? 2000;
+        default:
+          // silence
+          return effect.duration ?? 2000;
+      }
+    };
     const playDialog = (lines: Array<string>, run: number, index = 0) => {
       if (run !== dialogRun) {
         return;
@@ -87,9 +119,17 @@ export default defineComponent({
         return;
       }
 
-      addToOutput(interpolate(line, result.value));
+      const effect = parseEffect(line);
+
+      if (effect) {
+        setTimeout(() => playDialog(lines, run, index + 1), playEffect(effect));
+        return;
+      }
+
+      const text = interpolate(line, { ...getClock(new Date()), ...result.value });
+      addToOutput(text);
       isTyping.value = true;
-      setTimeout(() => playDialog(lines, run, index + 1), line.length * 80);
+      setTimeout(() => playDialog(lines, run, index + 1), text.length * DELAY_PER_CHARACTER);
     };
     const playActiveDialog = () => {
       const question = activeQuestion.value;
@@ -113,6 +153,11 @@ export default defineComponent({
       addToOutput(`>> ${option.label}`);
       saveAnswer(option.value);
     };
+    const onTimeout = (option: QuaireSelectOption) => {
+      addToOutput(`${activeQuestion.value?.title}`);
+      addToOutput(`[${option.label}]`);
+      saveAnswer(option.value);
+    };
     const restoreGame = () => {
       const outputItem = localStorage.getItem('output');
       const resultItem = localStorage.getItem('result');
@@ -121,8 +166,9 @@ export default defineComponent({
       localStorage.removeItem('activeQuestionId');
 
       if (outputItem && resultItem) {
-        output.value = outputItem.split('|||');
         startQuaire(JSON.parse(resultItem));
+        // without answers on the path the game starts again, e.g. after the story changed
+        output.value = Q.getProgress().answered > 0 ? outputItem.split('|||') : [];
       } else {
         startQuaire();
       }
@@ -175,10 +221,12 @@ export default defineComponent({
       output,
       isTyping,
       isInitializing,
+      isFlickering,
       activeQuestion,
       ending,
       onInput,
       onSingleSelect,
+      onTimeout,
       onResetGame,
       onClearGame,
     };
@@ -196,6 +244,36 @@ export default defineComponent({
   scroll-margin: 0;
   scroll-padding: 0;
   line-height: 28px;
+}
+
+@keyframes flicker {
+  0%,
+  100% {
+    filter: none;
+    transform: none;
+  }
+  20% {
+    filter: invert(1);
+    transform: translateX(-4px);
+  }
+  40% {
+    filter: brightness(0.2);
+  }
+  60% {
+    filter: invert(1) hue-rotate(90deg);
+    transform: translateX(4px);
+  }
+  80% {
+    filter: brightness(2);
+  }
+}
+
+.flicker {
+  animation: flicker 0.8s steps(5);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
 .ending {

@@ -37,4 +37,14 @@ describe('VueInput.vue', () => {
 
     expect(wrapper.find('[role="alert"]').text()).toBe('Please enter an answer.');
   });
+
+  test('should show the pattern error and trim the input', async () => {
+    const wrapper = mount(VueInput, { props: { activeQuestion: getQuestion({ error: 'PATTERN', isValid: false }) } });
+
+    await wrapper.find('input').setValue('  2026 ');
+    await wrapper.find('form').trigger('submit');
+
+    expect(wrapper.emitted('onSubmit')).toEqual([['2026']]);
+    expect(wrapper.find('[role="alert"]').text()).toBe("That doesn't look right. Please try again.");
+  });
 });
