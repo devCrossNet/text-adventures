@@ -1,10 +1,6 @@
 <template>
   <ul class="output">
-    <li
-      v-for="(item, idx) in output"
-      :key="idx"
-      :class="item.startsWith('>>') && 'playerMessage'"
-    >
+    <li v-for="(item, idx) in output" :key="idx" :class="item.startsWith('>>') && 'playerMessage'">
       {{ item }}
     </li>
     <li v-if="isTyping" class="dot-pulse loader"></li>
@@ -12,12 +8,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from 'vue';
 
 export default defineComponent({
-  name: "VueOutput",
+  name: 'VueOutput',
   props: {
-    output: { type: Array, required: true },
+    output: { type: Array as PropType<Array<string>>, required: true },
     isTyping: { type: Boolean, default: false },
   },
 });
@@ -48,7 +44,7 @@ export default defineComponent({
 }
 .dot-pulse::before,
 .dot-pulse::after {
-  content: "";
+  content: '';
   display: inline-block;
   position: absolute;
   top: 0;

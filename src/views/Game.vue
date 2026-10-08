@@ -4,17 +4,18 @@
       <vue-menu @reset="onResetGame" @clear="onClearGame" />
       <vue-output :output="output" :is-typing="isTyping" />
       <vue-input
-        v-if="activeQuestion && activeQuestion.componentType === 'INPUT'"
+        v-if="activeQuestion?.type === 'INPUT'"
+        :key="activeQuestion.id"
         :active-question="activeQuestion"
         @onSubmit="onInput"
       />
       <vue-single-select
-        v-if="
-          activeQuestion && activeQuestion.componentType === 'SINGLE_SELECT'
-        "
+        v-if="activeQuestion?.type === 'SINGLE_SELECT'"
+        :key="activeQuestion.id"
         :active-question="activeQuestion"
         @onSubmit="onSingleSelect"
       />
+      <div v-if="ending && !isTyping" class="ending">{{ ending }}</div>
     </template>
 
     <vue-loader v-else />
@@ -22,118 +23,118 @@
 </template>
 
 <script lang="ts">
-import template from "lodash.template";
-import { defineComponent, onBeforeMount, ref, watch } from "vue";
-import {
-  MyComponentType,
-  MyItem,
-  MyQuaire,
-  MyQuestion,
-} from "@/views/MyQuaire";
-import { QuaireItemOption } from "quaire";
-import VueInput from "@/components/VueInput.vue";
-import VueSingleSelect from "@/components/VueSingleSelect.vue";
-import VueMenu from "@/components/VueMenu.vue";
-import VueOutput from "@/components/VueOutput.vue";
-import VueLoader from "@/components/VueLoader.vue";
-import { useRoute } from "vue-router";
-import { sleep } from "@/utils";
+import { computed, defineComponent, onBeforeMount, onUnmounted, ref, shallowRef, watch } from 'vue';
+import type { QuaireResult, QuaireSelectOption } from 'quaire';
+import { createQuaire, type GameQuestionDefinition } from '@/quaire';
+import { loadGame } from '@/games';
+import VueInput from '@/components/VueInput.vue';
+import VueSingleSelect from '@/components/VueSingleSelect.vue';
+import VueMenu from '@/components/VueMenu.vue';
+import VueOutput from '@/components/VueOutput.vue';
+import VueLoader from '@/components/VueLoader.vue';
+import { useRoute } from 'vue-router';
+import { interpolate, sleep } from '@/utils';
 
 export default defineComponent({
-  name: "GamePage",
+  name: 'GamePage',
   components: { VueLoader, VueOutput, VueMenu, VueSingleSelect, VueInput },
   setup() {
     const route = useRoute();
-    const items = ref<Array<MyItem>>([]);
+    let questions: Array<GameQuestionDefinition> = [];
     const outputRef = ref<HTMLElement | null>(null);
     const output = ref<Array<string>>([]);
     const isTyping = ref(false);
     const isInitializing = ref(true);
-    let Q = new MyQuaire({ items: [] });
-    const activeQuestion = ref<MyQuestion | null>(Q.getActiveQuestion());
-    const result = ref(Q.getResult());
+    let Q = createQuaire(questions);
+    const state = shallowRef(Q.getState());
+    let unsubscribe = Q.subscribe((newState) => (state.value = newState));
+    const activeQuestion = computed(() => state.value.activeQuestion);
+    const result = computed(() => state.value.result);
+    const ending = computed(() => {
+      if (!state.value.isComplete) {
+        return null;
+      }
 
+      return (activeQuestion.value?.type === 'DIALOG' && activeQuestion.value.end) || 'THE END';
+    });
+    // a reset stops the dialog that is playing
+    let dialogRun = 0;
+
+    const startQuaire = (savedResult?: QuaireResult) => {
+      unsubscribe();
+      Q = createQuaire(questions, savedResult);
+      state.value = Q.getState();
+      unsubscribe = Q.subscribe((newState) => (state.value = newState));
+    };
     const addToOutput = (line: string) => {
       output.value.push(line);
-      window.localStorage.setItem("output", output.value.join("|||"));
+      window.localStorage.setItem('output', output.value.join('|||'));
     };
-    const handleDialog = (
-      dialog: Array<string> | unknown | undefined,
-      answer: boolean
-    ) => {
-      if (answer) {
+    const saveAnswer = (answer: unknown) => {
+      Q.saveAnswer(answer);
+      window.localStorage.setItem('result', JSON.stringify(Q.getResult()));
+    };
+    const playDialog = (lines: Array<string>, run: number, index = 0) => {
+      if (run !== dialogRun) {
         return;
       }
 
       isTyping.value = false;
-      if (dialog && Array.isArray(dialog) && dialog.length > 0) {
-        const line = dialog.shift();
-        if (line) {
-          const compiled = template(line);
-          addToOutput(compiled(result.value));
-          isTyping.value = true;
-          setTimeout(() => handleDialog(dialog, answer), line.length * 80);
-        }
-      } else {
+      const line = lines[index];
+
+      if (line === undefined) {
         saveAnswer(true);
+        return;
       }
+
+      addToOutput(interpolate(line, result.value));
+      isTyping.value = true;
+      setTimeout(() => playDialog(lines, run, index + 1), line.length * 80);
     };
-    const saveAnswer = (answer: unknown) => {
-      Q.saveAnswer(answer);
-      activeQuestion.value = Q.getActiveQuestion();
-      result.value = Q.getResult();
+    const playActiveDialog = () => {
+      const question = activeQuestion.value;
 
-      if (activeQuestion.value) {
-        window.localStorage.setItem(
-          "activeQuestionId",
-          activeQuestion.value?.id.toString() || "1"
-        );
+      if (question?.type === 'DIALOG' && !question.hasValue) {
+        playDialog(question.lines, ++dialogRun);
       }
-
-      window.localStorage.setItem("result", JSON.stringify(result.value));
     };
     const onInput = (answer: string) => {
-      output.value.push(`${activeQuestion.value?.question}`);
-      output.value.push(`>> ${answer}`);
+      const question = activeQuestion.value;
       saveAnswer(answer);
+
+      // an invalid answer keeps the question active
+      if (activeQuestion.value?.id !== question?.id) {
+        addToOutput(`${question?.title}`);
+        addToOutput(`>> ${answer}`);
+      }
     };
-    const onSingleSelect = (option: QuaireItemOption) => {
-      output.value.push(`${activeQuestion.value?.question}`);
-      output.value.push(`>> ${option.label}`);
+    const onSingleSelect = (option: QuaireSelectOption) => {
+      addToOutput(`${activeQuestion.value?.title}`);
+      addToOutput(`>> ${option.label}`);
       saveAnswer(option.value);
     };
     const restoreGame = () => {
-      const outputItem = localStorage.getItem("output");
-      const activeQuestionIdItem = localStorage.getItem("activeQuestionId");
-      const resultItem = localStorage.getItem("result");
+      const outputItem = localStorage.getItem('output');
+      const resultItem = localStorage.getItem('result');
 
-      if (outputItem && activeQuestionIdItem && result) {
-        output.value = outputItem.split("|||");
+      // quaire 1.0 continues with the first open question, the saved question ID of 0.x is not needed anymore
+      localStorage.removeItem('activeQuestionId');
 
-        Q = new MyQuaire({
-          items: items.value,
-          result: JSON.parse(resultItem || "{}"),
-        });
-        Q.setActiveQuestionByQuestionId(parseInt(activeQuestionIdItem, 10));
-
-        result.value = Q.getResult();
-        activeQuestion.value = Q.getActiveQuestion();
+      if (outputItem && resultItem) {
+        output.value = outputItem.split('|||');
+        startQuaire(JSON.parse(resultItem));
       } else {
-        Q = new MyQuaire({ items: items.value });
-        result.value = Q.getResult();
-        activeQuestion.value = Q.getActiveQuestion();
+        startQuaire();
       }
     };
     const onResetGame = () => {
+      dialogRun++;
+      isTyping.value = false;
       output.value = [];
-      window.localStorage.removeItem("output");
-      window.localStorage.removeItem("activeQuestionId");
-      window.localStorage.removeItem("result");
+      window.localStorage.removeItem('output');
+      window.localStorage.removeItem('result');
 
-      Q = new MyQuaire({ items: items.value });
-
-      result.value = {};
-      activeQuestion.value = Q.getActiveQuestion();
+      Q.reset();
     };
     const onClearGame = () => {
       output.value = [];
@@ -145,23 +146,15 @@ export default defineComponent({
     };
 
     watch(activeQuestion, async () => {
-      if (activeQuestion.value?.componentType === MyComponentType.DIALOG) {
-        handleDialog(
-          activeQuestion.value?.dialogOptions,
-          result.value[activeQuestion.value.resultProperty]
-        );
-      }
+      playActiveDialog();
 
       await scrollToBottom();
     });
 
-    watch(output, async () => await scrollToBottom, { deep: true });
+    watch(output, async () => await scrollToBottom(), { deep: true });
 
     onBeforeMount(async () => {
-      const game = await import(
-        /* webpackChunkName: "game-data" */ `@/games/${route.params.id}`
-      );
-      items.value = game.items;
+      questions = await loadGame(String(route.params.id));
 
       await sleep(1000);
 
@@ -170,15 +163,11 @@ export default defineComponent({
       await sleep(1000);
 
       restoreGame();
+    });
 
-      if (activeQuestion.value?.componentType === MyComponentType.DIALOG) {
-        handleDialog(
-          activeQuestion.value?.dialogOptions,
-          result.value[activeQuestion.value.resultProperty]
-        );
-      }
-
-      await scrollToBottom();
+    onUnmounted(() => {
+      dialogRun++;
+      unsubscribe();
     });
 
     return {
@@ -187,7 +176,7 @@ export default defineComponent({
       isTyping,
       isInitializing,
       activeQuestion,
-      result,
+      ending,
       onInput,
       onSingleSelect,
       onResetGame,
@@ -207,5 +196,9 @@ export default defineComponent({
   scroll-margin: 0;
   scroll-padding: 0;
   line-height: 28px;
+}
+
+.ending {
+  margin-top: 28px;
 }
 </style>
